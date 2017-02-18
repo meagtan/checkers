@@ -1,8 +1,4 @@
 #include "checkersai.h"
-#include <limits.h>
-
-#define MAX_DEPTH 3
-#define MAX_MOVES 28
 
 int play_optimal_move(struct checkers *c)
 {
@@ -35,7 +31,7 @@ int alphabeta(struct checkers *c, int depth, int alpha, int beta, int player, mo
         !checkers_play(&c1, MOVE_ROW(pts[i]), MOVE_COL(pts[i]), MOVE_DIR(pts[i]));
         v1 = alphabeta(&c1, depth - 1, alpha, beta, player, &m);
         
-        if (player == c->turn ? v < v1 : v > v1) {
+        if ((player == c->turn ? v < v1 : v > v1) || ((rand() & 1) && v == v1)) { // randomized tie breaking
             v = v1;
             *best = pts[i];
         }
@@ -54,7 +50,7 @@ int moves(struct checkers *c, move *pts)
     for (int pt = 0; pt < 256; ++pt) {
         row = MOVE_ROW(pt);
         col = MOVE_COL(pt);
-        if (movable(c, &row, &col, MOVE_DIR(pt)) > 0 && ptc < MAX_MOVES) {
+        if (ptc < MAX_MOVES && movable(c, &row, &col, MOVE_DIR(pt)) > 0) {
             pts[ptc++] = pt;
         }
     }
