@@ -1,4 +1,9 @@
 #include "checkers.h"
+#include <limits.h>
+#include <stdlib.h>
+
+#define MAX_DEPTH 3
+#define MAX_MOVES 28
 
 /*
  * A move is represented by the tuple (row, col, dir), where
