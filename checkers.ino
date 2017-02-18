@@ -49,6 +49,7 @@ void setup() {
     Init_MAX7219();
     Serial.begin(9600);
     preMil2 = millis();
+    srand(analogRead(0)); // seed rand with analog noise
 }
 
 void loop() {
