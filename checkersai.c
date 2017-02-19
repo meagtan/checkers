@@ -35,8 +35,10 @@ int alphabeta(struct checkers *c, int depth, int alpha, int beta, int player, mo
             v = v1;
             *best = pts[i];
         }
-        if (player == c->player ? alpha < v : alpha > v) 
+        if (player == c->player && alpha < v) 
             alpha = v;
+        if (player != c->player && beta > v) 
+            beta = v;
         if (alpha >= beta)
             break;
     }
