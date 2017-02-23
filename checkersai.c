@@ -16,9 +16,7 @@ move optimal_move(struct checkers *c)
 
 int alphabeta(struct checkers *c, int depth, int alpha, int beta, int player, move *best)
 {
-    if (!depth || c->scores[0] == 12 || c->scores[1] == 12)
-        return 2 * c->scores[player] - c->scores[!player]; // favors scoring more
-    int v, v1, ptc;
+    int v, v1, ptc, row, col;
     move pts[MAX_MOVES], m;
     struct checkers c1;
     
@@ -26,9 +24,14 @@ int alphabeta(struct checkers *c, int depth, int alpha, int beta, int player, mo
     
     // iterate through each valid (row, col) that can move
     ptc = moves(c, pts);
+    if (!depth || !ptc)
+        return 2 * c->scores[player] - c->scores[!player]; // favors scoring more
+    
     for (int i = 0; i < ptc; ++i) {
         c1 = *c; // should this assignment work?
-        !checkers_play(&c1, MOVE_ROW(pts[i]), MOVE_COL(pts[i]), MOVE_DIR(pts[i]));
+        row = MOVE_ROW(pts[i]);
+        col = MOVE_COL(pts[i]);
+        checkers_play(&c1, &row, &col, MOVE_DIR(pts[i]));
         v1 = alphabeta(&c1, depth - 1, alpha, beta, player, &m);
         
         if ((player == c->player ? v < v1 : v > v1) || ((rand() & 1) && v == v1)) { // randomized tie breaking
@@ -49,7 +52,7 @@ int alphabeta(struct checkers *c, int depth, int alpha, int beta, int player, mo
 int moves(struct checkers *c, move *pts)
 {
     int ptc = 0, row, col;
-    for (int pt = 0; pt < 256; ++pt) {
+    for (int pt = 0; pt < 256; ++pt) { // can be optimized by iterating on points first
         row = MOVE_ROW(pt);
         col = MOVE_COL(pt);
         if (ptc < MAX_MOVES && movable(c, &row, &col, MOVE_DIR(pt)) > 0) {
