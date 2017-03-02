@@ -22,11 +22,12 @@ enum {
 };
 
 const int INIT_COUNT = 24, DELAY = 8, PL2BLINK = 180, CURSORBLINK = 100, PERIOD = 200;
+const bool automatic = true; // whether to make it play against itself
 
-int row = 3, col = 3, buttons[4][2] = {LOW};
-unsigned long curMillis, preMillis = 0, curMil2, preMil2 = 0;
+int row = 3, col = 2, buttons[4][2] = {LOW};
+unsigned long curMillis, preMillis = 0, curMil2, preMil2 = 0, preMil3 = 0;
 struct checkers game;
-bool selected = false, pl2Blinking = false, cursorBlinking = false, calced = false;
+bool selected = false, pl2Blinking = false, cursorBlinking = false, calced = false, reset = false;
 move best;
 
 // LED matrix port definitions
@@ -55,15 +56,30 @@ void setup() {
 void loop() {
     int i, j, n;
 
-    if (game.player/*1*/) {
+    curMil2 = millis();
+    if (reset && curMil2 - preMil3 > 2000) {
+        Serial.println(game.scores[0]);
+        Serial.println(game.scores[1]);
+        checkers_init(&game);
+        reset = false;
+        preMil2 = millis();
+    }
+
+    if (!reset && game.player | automatic) {
         //Serial.println(play_optimal_move(&game));
 
         // play move after delay
         curMil2 = millis();
-        if (calced && curMil2 - preMil2 > 500) {
-            int row = MOVE_ROW(best), col = MOVE_COL(best);
-            Serial.println(checkers_play(&game, &row, &col, MOVE_DIR(best)));
+        if (calced && curMil2 - preMil2 > 1000) {
+            int row = MOVE_ROW(best), col = MOVE_COL(best), res;
+            Serial.println(res = checkers_play(&game, &row, &col, MOVE_DIR(best)));
             calced = false;
+            if (res <= 0) {
+                reset = true;
+                preMil3 = millis();
+            }
+            if (res == 2)
+                Serial.println(game.player);
         } else if (!calced) {
             best = optimal_move(&game);
             Serial.println(best);
@@ -156,7 +172,7 @@ void printMatrix()
             b ^= game.table[i][j] & 1;
             if (pl2Blinking && (game.table[i][j] & 2)) // blink player 2
                 b ^= 1;
-            if (cursorBlinking && i == row && j == col) // blink cursor
+            if (cursorBlinking && !automatic && i == row && j == col) // blink cursor
                 b ^= 1;
         }
         Write_Max7219(1 + j, b);
@@ -211,4 +227,3 @@ void Write_Max7219_byte(unsigned char data)
      digitalWrite(Max7219_pinCLK, HIGH);
   }                                 
 }
-
